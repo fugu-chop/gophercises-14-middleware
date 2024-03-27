@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	PanicHandler "recover/pkg"
 )
 
 func main() {
@@ -11,7 +13,9 @@ func main() {
 	mux.HandleFunc("/panic/", panicDemo)
 	mux.HandleFunc("/panic-after/", panicAfterDemo)
 	mux.HandleFunc("/", hello)
-	log.Fatal(http.ListenAndServe(":3000", mux))
+	wrappedMux := PanicHandler.NewPanicHandler(mux)
+
+	log.Fatal(http.ListenAndServe(":3000", wrappedMux))
 }
 
 func panicDemo(w http.ResponseWriter, r *http.Request) {
