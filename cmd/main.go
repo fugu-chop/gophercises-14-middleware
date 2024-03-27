@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	PanicHandler "recover/pkg"
+	grace "recover/pkg/grace"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 	mux.HandleFunc("/panic/", panicDemo)
 	mux.HandleFunc("/panic-after/", panicAfterDemo)
 	mux.HandleFunc("/", hello)
-	wrappedMux := PanicHandler.NewPanicHandler(mux)
+	wrappedMux := grace.NewPanicHandler(mux)
 
 	log.Fatal(http.ListenAndServe(":3000", wrappedMux))
 }
