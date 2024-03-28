@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	grace "recover/pkg/grace"
 )
 
 func main() {
@@ -13,9 +11,22 @@ func main() {
 	mux.HandleFunc("/panic/", panicDemo)
 	mux.HandleFunc("/panic-after/", panicAfterDemo)
 	mux.HandleFunc("/", hello)
-	wrappedMux := grace.NewPanicHandler(mux)
+	wrappedMux := recoverMiddleware(mux)
 
 	log.Fatal(http.ListenAndServe(":3000", wrappedMux))
+}
+
+func recoverMiddleware(mux http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			r := recover()
+			if r != nil {
+				http.Error(w, "Something went wrong!", http.StatusInternalServerError)
+			}
+		}()
+
+		mux.ServeHTTP(w, r)
+	}
 }
 
 func panicDemo(w http.ResponseWriter, r *http.Request) {
