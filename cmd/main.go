@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 )
 
 func main() {
@@ -11,17 +12,24 @@ func main() {
 	mux.HandleFunc("/panic/", panicDemo)
 	mux.HandleFunc("/panic-after/", panicAfterDemo)
 	mux.HandleFunc("/", hello)
-	wrappedMux := recoverMiddleware(mux)
+	wrappedMux := recoverMiddleware(mux, true)
 
 	log.Fatal(http.ListenAndServe(":3000", wrappedMux))
 }
 
-func recoverMiddleware(mux http.Handler) http.HandlerFunc {
+func recoverMiddleware(mux http.Handler, dev bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			r := recover()
 			if r != nil {
-				http.Error(w, "Something went wrong!", http.StatusInternalServerError)
+				log.Println(r)
+				stack := string(debug.Stack())
+				log.Println(stack)
+				if !dev {
+					http.Error(w, "Something went wrong!", http.StatusInternalServerError)
+					return
+				}
+				fmt.Fprintf(w, "<h1>panic: %s</h1><pre>%v</pre>", r, stack)
 			}
 		}()
 
