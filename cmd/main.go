@@ -17,8 +17,8 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3000", wrappedMux))
 }
 
-// We never need to use Header(), so we rely on the standard Header()
-// method available within the base http.ResponseWriter we provide
+// We never need to use Header(), so we don't need to define it
+// on our interface
 type responseWriterInterceptor struct {
 	http.ResponseWriter
 	writes [][]byte
